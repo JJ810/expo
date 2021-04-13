@@ -143,6 +143,8 @@ export async function checkChangelog(): Promise<void> {
     danger.git.modified_files.filter(file => file.startsWith('packages')),
     file => file.split(path.sep)[1]
   );
+  console.log({ modifiedPackages });
+  process.exit(0);
 
   console.log('🔎 Searching for packages without changelog...');
   const packagesWithoutChangelog = Object.entries(modifiedPackages)
