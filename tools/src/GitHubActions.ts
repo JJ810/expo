@@ -4,8 +4,15 @@ import {
   ActionsListJobsForWorkflowRunResponseData,
   PullsGetResponseData,
   IssuesCreateCommentResponseData,
+  PullsCreateReviewResponseData,
+  PullsUpdateReviewResponseData,
+  PullsSubmitReviewResponseData,
+  PullsListReviewsResponseData,
+  PullsListCommentsForReviewResponseData,
+  IssuesListCommentsResponseData,
+  UsersGetAuthenticatedResponseData,
 } from '@octokit/types';
-import { request } from '@octokit/request';
+
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -150,21 +157,4 @@ export async function commentOnIssueAsync(
     })
   );
   return response.data;
-}
-
-/**
- * Copies given object with params specific for `expo/expo` repository and with authorization token.
- */
-function makeExpoOptions<T>(
-  options: T & { headers?: object }
-): T & { owner: string; repo: string } {
-  return {
-    headers: {
-      authorization: `token ${process.env.GITHUB_TOKEN}`,
-      ...options?.headers,
-    },
-    owner: 'expo',
-    repo: 'expo',
-    ...options,
-  };
 }

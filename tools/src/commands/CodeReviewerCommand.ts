@@ -1,47 +1,19 @@
 import { Command } from '@expo/commander';
-import parseDiff from 'parse-diff';
-import path from 'path';
 
-import { EXPO_DIR } from '../Constants';
-import Git from '../Git';
-import { getPullRequestAsync } from '../GitHubActions';
-import { getListOfPackagesAsync } from '../Packages';
+import { reviewPullRequestAsync } from '../code-review';
 
-async function action(options: object) {
-  const pr = await getPullRequestAsync(options.pr);
+type ActionOptions = {
+  pr: string;
+};
 
-  console.log(`Fetching base commit: ${pr.base.sha}`);
-  await Git.fetchAsync({
-    remote: 'origin',
-    ref: pr.base.sha,
-  });
-
-  console.log(`Fetching head commit: ${pr.head.sha}`);
-  await Git.fetchAsync({
-    remote: 'origin',
-    ref: pr.head.sha,
-  });
-
-  const diff = parseDiff(
-    (await Git.runAsync(['diff', `${pr.base.sha}..${pr.head.sha}`])).output.join('')
-  );
-  console.log(diff);
-
-  // const changedFiles = await Git.logFilesAsync({ fromCommit: pr.base.sha, toCommit: pr.head.sha });
-  // console.log(changedFiles);
-
-  // // const diff = await Git.runAsync(['diff', `${pr.base.sha}..${pr.head.sha}`]);
-  // // console.log(diff.output);
-
-  const allPackages = await getListOfPackagesAsync();
-  const modifiedPackages = allPackages.filter((pkg) => {
-    const pkgPath = pkg.path.replace(/([^/])$/, '$1/');
-    return diff.some(({ to: relativePath }) =>
-      path.join(EXPO_DIR, relativePath).startsWith(pkgPath)
-    );
-  });
-
-  console.log(modifiedPackages);
+async function action(options: ActionOptions) {
+  if (isNaN(+options.pr)) {
+    throw new Error('Flag `--pr` must be provided with a number value.');
+  }
+  if (!process.env.GITHUB_TOKEN) {
+    throw new Error('Environment variable `GITHUB_TOKEN` is required for this command.');
+  }
+  await reviewPullRequestAsync(+options.pr);
 }
 
 export default (program: Command) => {
